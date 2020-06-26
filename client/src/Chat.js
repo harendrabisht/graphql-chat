@@ -1,19 +1,26 @@
 import React, { Component } from 'react';
-import { addMessage, getMessages } from './graphql/queries';
+import { addMessage, getMessages, addMessageSocket } from './graphql/queries';
 import MessageInput from './MessageInput';
 import MessageList from './MessageList';
 
 class Chat extends Component {
   state = {messages: []};
+  messageSubscription = null;
 
   async componentDidMount() {
     const messages = await getMessages();
     this.setState({messages});
+    this.messageSubscription = addMessageSocket((message => {
+      this.setState({messages: this.state.messages.concat(message)});
+    }))
+  }
+
+  componentWillUnmount() {
+    this.messageSubscription.unsubscribe();
   }
 
   async handleSend(text) {
-    const message = await addMessage(text);
-    this.setState({messages: this.state.messages.concat(message)});
+    await addMessage(text);
   }
 
   render() {
