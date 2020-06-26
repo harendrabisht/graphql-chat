@@ -9,6 +9,9 @@ const httpUrl = 'http://localhost:5000/graphql';
 const wsUrl = 'ws://localhost:5000/graphql'
 
 const wsLink = new WebSocketLink({ uri: wsUrl, options: {
+  connectionParams: () => ({
+    accessToken: getAccessToken(),
+  }),
   lazy: true,
   reconnect: true,
 }});
