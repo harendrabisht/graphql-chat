@@ -1,9 +1,43 @@
 import React, { Component } from 'react';
-import { addMessage, getMessages, addMessageSocket } from './graphql/queries';
+import { useQuery, useMutation, useSubscription } from '@apollo/react-hooks';
+
+import { messagesQuery, addMessageMutation, addMessageSubscription } from './graphql/queries';
 import MessageInput from './MessageInput';
 import MessageList from './MessageList';
 
-class Chat extends Component {
+
+
+const Chat = ({ user }) => {
+  const { data } = useQuery(messagesQuery);
+  const [addMessage] = useMutation(addMessageMutation);
+  const messages = data ? data.messages : [];
+
+  useSubscription(addMessageSubscription, {
+    onSubscriptionData:({ client, subscriptionData }) => {
+      client.writeData({data: {
+        messages: messages.concat(subscriptionData.data.messageAdded),
+      }})
+    }
+  })
+
+  const handleSend = async (text) => {
+    //handle message
+    await addMessage({
+      variables: {input: {text}}
+    });
+  }
+
+  return (
+    <section className="section">
+      <div className="container">
+        <h1 className="title">Chatting as {user}</h1>
+        <MessageList user={user} messages={messages} />
+        <MessageInput onSend={handleSend} />
+      </div>
+    </section>
+  );
+}
+/* class Chat extends Component {
   state = {messages: []};
   messageSubscription = null;
 
@@ -37,5 +71,5 @@ class Chat extends Component {
     );
   }  
 }
-
+ */
 export default Chat;
